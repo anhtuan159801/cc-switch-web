@@ -93,6 +93,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             &pass,
         )?;
     }
+    if env::var("CC_SWITCH_SUPABASE_URL").is_ok()
+        && env::var("CC_SWITCH_WEB_ADMIN_PASSWORD").map_or(true, |value| value.is_empty())
+    {
+        return Err(io::Error::other("Cloud deployments require CC_SWITCH_WEB_ADMIN_PASSWORD in Koyeb Secrets").into());
+    }
     let (auth_state, password_path) = load_or_generate_web_credentials()?;
     let username = auth_state
         .read()
