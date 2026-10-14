@@ -7,15 +7,41 @@ sessions, managed OAuth accounts, uploaded files, or the entire SQLite DB.
 
 ## One-click Koyeb setup (requires your account login)
 
-[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&builder=dockerfile&dockerfile=Dockerfile&repository=github.com%2Fanhtuan159801%2Fcc-switch-web&branch=feat%2Fkoyeb-persistent-encrypted-config&name=cc-switch-web&ports=3000%3Bhttp%3B%2F&env%5BHOST%5D=0.0.0.0&env%5BPORT%5D=3000&env%5BALLOW_HTTP_BASIC_OVER_HTTP%5D=1&env%5BCC_SWITCH_CLOUD_REQUIRED%5D=1)
+[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&builder=dockerfile&dockerfile=Dockerfile&repository=github.com%2Fanhtuan159801%2Fcc-switch-web&branch=feat%2Fkoyeb-persistent-encrypted-config&name=cc-switch-web&ports=3000%3Bhttp%3B%2F&env%5BHOST%5D=0.0.0.0&env%5BPORT%5D=3000&env%5BALLOW_HTTP_BASIC_OVER_HTTP%5D=1)
 
 This pre-fills the public GitHub repository, development branch, Dockerfile,
-port 3000, and nonsecret environment variables. **Before pressing Deploy,**
+port 3000, and nonsecret environment variables. It does not enable cloud-required mode until you configure its Secrets. **Before enabling \`CC_SWITCH_CLOUD_REQUIRED=1\` and pressing Deploy,**
 add all four private values as Koyeb Secrets:
 `CC_SWITCH_WEB_ADMIN_PASSWORD`, `CC_SWITCH_SUPABASE_URL`,
 `CC_SWITCH_SUPABASE_SECRET_KEY`, `CC_SWITCH_SYNC_ENCRYPTION_KEY`.
 No secret is embedded in the link. Configure **one running instance** and
 select an eligible free instance only if your account supports it.
+
+## Koyeb health check failure: cloud settings missing
+
+If the build completes but the app exits with:
+
+```text
+Cloud persistence is required but CC_SWITCH_SUPABASE_URL,
+CC_SWITCH_SUPABASE_SECRET_KEY, or CC_SWITCH_SYNC_ENCRYPTION_KEY are missing
+```
+
+the container is intentionally refusing to run with
+`CC_SWITCH_CLOUD_REQUIRED=1` and missing backup credentials.
+**Do not fix this by changing the Dockerfile or increasing memory.**
+
+- **Temporary web preview only:** In Koyeb -> Service -> Settings ->
+  Environment variables, change `CC_SWITCH_CLOUD_REQUIRED=1` to `0`,
+  ensure no half-configured cloud variables, and select
+  **Deploy without rebuild**. Provider API keys saved here are NOT durable.
+- **Production persistence:** Restore/activate your Supabase project, run the
+  migration in this repo, and add `CC_SWITCH_SUPABASE_URL`,
+  `CC_SWITCH_SUPABASE_SECRET_KEY`, `CC_SWITCH_SYNC_ENCRYPTION_KEY`, and
+  `CC_SWITCH_WEB_ADMIN_PASSWORD` (minimum 16 characters) as Koyeb Secret-backed
+  environment variables. Keep `CC_SWITCH_CLOUD_REQUIRED=1`.
+  Then choose **Deploy without rebuild**.
+
+Never paste actual secret values into GitHub Issues, chat, or public logs.
 
 ## 1. Configure Supabase (required for persistence)
 
