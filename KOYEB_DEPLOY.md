@@ -5,6 +5,18 @@ single-instance hosting. It preserves the provider configuration, including manu
 API keys, during container replacement. It does **not** preserve usage logs,
 sessions, managed OAuth accounts, uploaded files, or the entire SQLite DB.
 
+## One-click Koyeb setup (requires your account login)
+
+[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&builder=dockerfile&dockerfile=Dockerfile&repository=github.com%2Fanhtuan159801%2Fcc-switch-web&branch=feat%2Fkoyeb-persistent-encrypted-config&name=cc-switch-web&ports=3000%3Bhttp%3B%2F&env%5BHOST%5D=0.0.0.0&env%5BPORT%5D=3000&env%5BALLOW_HTTP_BASIC_OVER_HTTP%5D=1&env%5BCC_SWITCH_CLOUD_REQUIRED%5D=1)
+
+This pre-fills the public GitHub repository, development branch, Dockerfile,
+port 3000, and nonsecret environment variables. **Before pressing Deploy,**
+add all four private values as Koyeb Secrets:
+`CC_SWITCH_WEB_ADMIN_PASSWORD`, `CC_SWITCH_SUPABASE_URL`,
+`CC_SWITCH_SUPABASE_SECRET_KEY`, `CC_SWITCH_SYNC_ENCRYPTION_KEY`.
+No secret is embedded in the link. Configure **one running instance** and
+select an eligible free instance only if your account supports it.
+
 ## 1. Configure Supabase (required for persistence)
 
 Use an **active** Supabase project. Run
