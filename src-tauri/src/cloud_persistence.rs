@@ -92,7 +92,7 @@ impl CloudPersistence {
 
     fn request(&self, method: reqwest::Method) -> reqwest::RequestBuilder {
         let req = self.client.request(method, self.endpoint.clone())
-            .header("apikey", &self.secret);
+            .header("apikey", self.secret.as_str());
         // Legacy service_role JWTs also accept Authorization: Bearer <JWT>.
         // Modern sb_secret_* keys MUST be sent via apikey (they are not JWTs).
         if self.secret.starts_with("sb_secret_") {
@@ -165,10 +165,10 @@ impl CloudPersistence {
         Ok(true)
     }
 
-    /// Immediate notification after provider changes, with a 5-second retry/poll
+    /// Immediate notification after provider changes, with a 2-second retry/poll
     /// fallback for other updates. Pending changes also flush on graceful exit.
     pub async fn run_worker(self, state: Arc<AppState>) {
-        let mut interval = tokio::time::interval(Duration::from_secs(5));
+        let mut interval = tokio::time::interval(Duration::from_secs(2));
         interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
         let notifier = DIRTY.get_or_init(Notify::new);
         loop {
