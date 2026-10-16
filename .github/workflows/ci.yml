@@ -43,10 +43,13 @@ jobs:
         run: cargo check --manifest-path src-tauri/Cargo.toml --lib
 
       - name: Check (web-server)
-        run: cargo check --manifest-path src-tauri/Cargo.toml --features web-server --example server
+        run: cargo check --manifest-path src-tauri/Cargo.toml --no-default-features --features web-server --example server
 
       - name: Test
         run: cargo test --manifest-path src-tauri/Cargo.toml --lib
+
+      - name: Test encrypted cloud backup (headless)
+        run: cargo test --manifest-path src-tauri/Cargo.toml --no-default-features --features web-server cloud_persistence
 
   lint:
     name: Lint

@@ -54,6 +54,8 @@ impl Database {
 
         tx.commit().map_err(|e| AppError::Database(e.to_string()))?;
         crate::webdav_auto_sync::notify_db_changed("providers");
+        #[cfg(feature = "web-server")]
+        crate::cloud_persistence::notify_changed();
         Ok(())
     }
 

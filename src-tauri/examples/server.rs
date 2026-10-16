@@ -84,6 +84,20 @@ fn is_lan_bind_ip(ip: IpAddr) -> bool {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     init_logger();
 
+    if let Some(pass) = env::var("CC_SWITCH_WEB_ADMIN_PASSWORD").ok().filter(|p| !p.is_empty()) {
+        if pass.len() < 16 {
+            return Err(io::Error::other("CC_SWITCH_WEB_ADMIN_PASSWORD must have at least 16 characters").into());
+        }
+        cc_switch_lib::web_api::persist_web_credentials(
+            &env::var("CC_SWITCH_WEB_ADMIN_USER").unwrap_or_else(|_| "admin".into()),
+            &pass,
+        )?;
+    }
+    if env::var("CC_SWITCH_SUPABASE_URL").is_ok()
+        && env::var("CC_SWITCH_WEB_ADMIN_PASSWORD").map_or(true, |value| value.is_empty())
+    {
+        return Err(io::Error::other("Cloud deployments require CC_SWITCH_WEB_ADMIN_PASSWORD in Koyeb Secrets").into());
+    }
     let (auth_state, password_path) = load_or_generate_web_credentials()?;
     let username = auth_state
         .read()
@@ -91,6 +105,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(|err| io::Error::other(err.to_string()))?;
 
     let state: SharedState = Arc::new(AppState::try_new()?);
+    let cloud = cc_switch_lib::cloud_persistence::CloudPersistence::from_env()?;
+    if let Some(ref cloud) = cloud {
+        cloud.restore(&state).await?;
+    }
 
     match cc_switch_lib::ProviderService::import_openclaw_providers_from_live(&state) {
         Ok(count) if count > 0 => {
@@ -150,6 +168,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    if let Some(ref cloud) = cloud {
+        cloud.sync_pending(&state).await?;
+        tokio::spawn(cloud.clone().run_worker(state.clone()));
+    }
     cc_switch_lib::local_proxy::start_from_saved_settings(state.clone()).await;
     cc_switch_lib::start_webdav_auto_sync_worker(state.clone());
     tokio::spawn(cc_switch_lib::run_periodic_backup_worker(state.db.clone()));

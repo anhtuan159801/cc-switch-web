@@ -2,6 +2,8 @@ mod app_config;
 #[cfg(feature = "desktop")]
 mod app_store;
 mod auth;
+#[cfg(feature = "web-server")]
+pub mod cloud_persistence;
 pub mod capabilities;
 mod claude_desktop_config;
 mod claude_mcp;
